@@ -21,6 +21,9 @@ app.use(express.json());
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/canvas", canvasRoutes);
+app.get("/", (req, res) => {
+  res.send("API is running");
+});
 
 connectToDB();
 
