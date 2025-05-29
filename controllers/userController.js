@@ -18,15 +18,13 @@ exports.registerUser = async (req, res) => {
       return res.status(400).json({ error: "User already exists" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = new User({ email, password: hashedPassword });
+    const newUser = new User({ email, password }); // 🟢 Let pre-save hook hash it
     await newUser.save();
 
-    console.log("✅ User saved to DB:", email); // Helpful log
+    console.log("✅ User saved to DB:", email);
     res.status(201).json({ message: "User registered successfully!" });
   } catch (error) {
-    console.error("❌ Registration error:", error); // More visibility
+    console.error("❌ Registration error:", error);
     res
       .status(500)
       .json({ error: "Registration failed", details: error.message });
