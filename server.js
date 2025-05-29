@@ -43,11 +43,11 @@ let i = 0;
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
-  socket.on("joinCanvas", async ({ canvasId }) => {
+  socket.on("joinCanvas", async ({ canvasId, token }) => {
     console.log("Joining canvas:", canvasId);
+
     try {
-      const authHeader = socket.handshake.headers.authorization;
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      if (!token || !token.startsWith("Bearer ")) {
         console.log("No token provided.");
         setTimeout(() => {
           socket.emit("unauthorized", { message: "Access Denied: No Token" });
@@ -55,13 +55,12 @@ io.on("connection", (socket) => {
         return;
       }
 
-      const token = authHeader.split(" ")[1];
-      const decoded = jwt.verify(token, SECRET_KEY);
+      const actualToken = token.split(" ")[1];
+      const decoded = jwt.verify(actualToken, SECRET_KEY);
       const userId = decoded.userId;
       console.log("User ID:", userId);
 
       const canvas = await Canvas.findById(canvasId);
-      console.log(canvas);
       if (
         !canvas ||
         (String(canvas.owner) !== String(userId) &&
@@ -76,13 +75,10 @@ io.on("connection", (socket) => {
         return;
       }
 
-      // socket.emit("authorized");
-
       socket.join(canvasId);
       console.log(`User ${socket.id} joined canvas ${canvasId}`);
 
       if (canvasData[canvasId]) {
-        console.log(canvasData);
         socket.emit("loadCanvas", canvasData[canvasId]);
       } else {
         socket.emit("loadCanvas", canvas.elements);
