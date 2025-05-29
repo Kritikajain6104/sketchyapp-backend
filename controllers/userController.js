@@ -5,54 +5,64 @@ const SECRET_KEY = "your_secret_key"; // Replace with a secure key
 
 // Register User
 exports.registerUser = async (req, res) => {
-    try {
-        const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-        if (!email || !password) {
-            return res.status(400).json({ error: "All fields are required" });
-        }
-
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ error: "User already exists" });
-        }
-
-        const newUser = new User({ email, password });
-        await newUser.save();
-
-        res.status(201).json({ message: "User registered successfully!" });
-    } catch (error) {
-        res.status(500).json({ error: "Registration failed", details: error.message });
+    if (!email || !password) {
+      return res.status(400).json({ error: "All fields are required" });
     }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = new User({ email, password: hashedPassword });
+    await newUser.save();
+
+    console.log("✅ User saved to DB:", email); // Helpful log
+    res.status(201).json({ message: "User registered successfully!" });
+  } catch (error) {
+    console.error("❌ Registration error:", error); // More visibility
+    res
+      .status(500)
+      .json({ error: "Registration failed", details: error.message });
+  }
 };
 
 // Login User
 exports.loginUser = async (req, res) => {
-    try {
-        const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-        const user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ error: "Invalid credentials" });
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ error: "Invalid credentials" });
 
-        const isMatch = await user.comparePassword(password);
-        if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
 
-        const token = jwt.sign({ userId: user._id }, SECRET_KEY, { expiresIn: "7d" });
+    const token = jwt.sign({ userId: user._id }, SECRET_KEY, {
+      expiresIn: "7d",
+    });
 
-        res.json({ message: "Login successful", token });
-    } catch (error) {
-        res.status(500).json({ error: "Login failed", details: error.message });
-    }
+    res.json({ message: "Login successful", token });
+  } catch (error) {
+    res.status(500).json({ error: "Login failed", details: error.message });
+  }
 };
 
 // Get User Details
 exports.getUser = async (req, res) => {
-    try {
-        const user = await User.findById(req.userId).select("-password");
-        if (!user) return res.status(404).json({ error: "User not found" });
+  try {
+    const user = await User.findById(req.userId).select("-password");
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-        res.json(user);
-    } catch (error) {
-        res.status(500).json({ error: "Failed to get user", details: error.message });
-    }
+    res.json(user);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Failed to get user", details: error.message });
+  }
 };

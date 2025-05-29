@@ -26,6 +26,7 @@ app.get("/", (req, res) => {
 });
 
 connectToDB();
+console.log(mongoose.connection.name);
 
 const server = http.createServer(app);
 const io = new Server(server, {
