@@ -1,17 +1,20 @@
 const mongoose = require("mongoose");
+require("dotenv").config();
 
-const connectToDB = async () => {
+const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-
-    console.log(`✅ MongoDB Connected: ${conn.connection.name}`);
+    await mongoose.connect(
+      "mongodb+srv://kritikajainwhiteboard:WHITEBOARD12@learn.1ybfgiz.mongodb.net/whiteboard?retryWrites=true&w=majority&appName=Learn",
+      {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      }
+    );
+    console.log("✅ MongoDB Connected");
   } catch (error) {
-    console.error("❌ MongoDB connection failed:", error.message);
+    console.error("❌ MongoDB Connection Failed:", error.message);
     process.exit(1);
   }
 };
 
-module.exports = connectToDB;
+module.exports = connectDB;
